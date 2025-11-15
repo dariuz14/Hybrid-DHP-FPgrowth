@@ -11,8 +11,10 @@ class DHP:
         self.LARGE = large
 
     def _count_support(self, candidates, k):
-        candidate_support = defaultdict(int) # Count support for each candidate itemset
-        item_counts = defaultdict(int) # Count occurrences of individual items in candidates
+        # Count support for each candidate itemset
+        candidate_support = defaultdict(int)
+        # Count occurrences of individual items in candidates 
+        item_counts = defaultdict(int) 
 
         reduced_transactions = []
 
@@ -71,9 +73,9 @@ class DHP:
             # Transaction too small to form (k+1)-itemsets so it disregarded
             if len(transaction) <= k:
                 continue
-            # Genera tutti i possibili (k+1)-itemsets dalla transazione
+            # Generate all possible (k+1)-itemsets from the transaction
             for itemset in combinations(transaction, k + 1):
-                # Verifica che tutti i k-subset siano frequenti
+                # Check that all k-subsets are frequent
                 valid = True
                 for subset in combinations(itemset, k):
                     if frozenset(subset) not in frequent_k_set:
@@ -92,7 +94,6 @@ class DHP:
         self.transactions = reduced_transactions
     
         return hash_table
-
 
     def _hash_function(self, itemset):
         hash_value = sum((i+1) * item for i, item in enumerate(sorted(itemset)))
@@ -123,7 +124,7 @@ class DHP:
 
         print(f'Numero di frequent 1-itemset: {len(frequent_1)}')
 
-        all_frequent = [(itemset, item_counts[list(itemset)[0]]) for itemset in frequent_1] # Lista di tuple (itemset, support)
+        all_frequent = [(itemset, item_counts[list(itemset)[0]]) for itemset in frequent_1]
         
         prev_frequent = frequent_1
 
@@ -135,8 +136,7 @@ class DHP:
         frequent_buckets = self._get_frequent_buckets(hash_table)
 
         while len(frequent_buckets) >= self.LARGE:
-            # Generate candidate k-itemsets, set di frozenset
-            # Qui posso fare una modifica nel caso in cui non si usa piu l'hash table come nella parte 3
+            # Generate candidate k-itemsets
             candidates = self._generate_candidates(prev_frequent, k, frequent_buckets) 
 
             if not candidates:
@@ -178,14 +178,3 @@ class DHP:
             k += 1
 
         return all_frequent
-
-
-            
-
-
-
-                        
-            
-
-
-        
