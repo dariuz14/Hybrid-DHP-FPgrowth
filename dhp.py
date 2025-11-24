@@ -2,13 +2,14 @@ from collections import defaultdict
 from itertools import combinations
 
 class DHP:
-    def __init__(self, min_support, dim_hash_table, transactions, large): 
+    def __init__(self, min_support, dim_hash_table, transactions, large, max_k=None): 
         self.min_support = min_support
         self.dim_hash_table = dim_hash_table
 
         self.transactions = [set(t) for t in transactions]
         # Threshold to switch from hashing to non-hashing
         self.LARGE = large
+        self.max_k = max_k
 
     def _count_support(self, candidates, k):
         # Count support for each candidate itemset
@@ -115,14 +116,12 @@ class DHP:
     def run(self):
 
         # Part 1: search for frequent 1-itemsets 
-        item_counts = defaultdict(int) # Conto la frequenza di ogni singolo item
+        item_counts = defaultdict(int)
         for transaction in self.transactions:
             for item in transaction:
                 item_counts[item] += 1
         
         frequent_1 = [frozenset([item]) for item, count in item_counts.items() if count >= self.min_support]
-
-        print(f'Numero di frequent 1-itemset: {len(frequent_1)}')
 
         all_frequent = [(itemset, item_counts[list(itemset)[0]]) for itemset in frequent_1]
         
@@ -155,6 +154,9 @@ class DHP:
             if not self.transactions:
                 break
 
+            if self.max_k is not None and k >= self.max_k:
+                return all_frequent
+
             hash_table = self._make_hash_table(frequent_k, k)
 
             frequent_buckets = self._get_frequent_buckets(hash_table)
@@ -178,3 +180,8 @@ class DHP:
             k += 1
 
         return all_frequent
+    
+    def get_transactions(self):
+        if self.transactions:
+            return self.transactions
+        return None

@@ -70,9 +70,10 @@ class FPTree:
         return True
                
 class FPgrowth:
-    def __init__(self, min_support, transactions):
+    def __init__(self, min_support, transactions, min_size=1):
         self.min_support = min_support
         self.transactions = [list(t) for t in transactions]
+        self.min_size = min_size
 
         self.fp_tree = None
     
@@ -96,7 +97,8 @@ class FPgrowth:
                 
                 # Add suffix
                 pattern = item_list + suffix
-                patterns.append((frozenset(pattern), min_count))
+                if len(pattern) >= self.min_size:
+                    patterns.append((frozenset(pattern), min_count))
         
         return patterns
 
@@ -117,7 +119,8 @@ class FPgrowth:
             support = sum(node.count for node in nodes)
 
             new_suffix = [item] + suffix
-            patterns.append((frozenset(new_suffix), support))
+            if len(new_suffix) >= self.min_size:
+                patterns.append((frozenset(new_suffix), support))
 
             conditional_pb = []
             for node in nodes:
