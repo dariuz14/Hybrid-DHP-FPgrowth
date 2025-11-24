@@ -10,4 +10,4 @@ FP-Growth (Frequent Pattern Growth) per la ricerca degli itemset frequenti e suc
 - Costruzione dell'FP-Tree sulla base del dataset ridotto.
 - Estrazione dei pattern direttamente dall'albero.
 
-## Come usare la repository
+**Step 3:** *Estrazione association-rules*

@@ -6,10 +6,11 @@ class HybridAlg:
         self.min_support = min_support
         self.min_size_per_fpg = max_k + 1     
         self.initial_dhp = DHP(min_support=min_support, dim_hash_table=dim_dhp_hash_table, transactions=transactions, large=large, max_k=max_k)
-    
+
     def run(self):
         frequent_max_k_itemsets = self.initial_dhp.run()
         transactions_after_dhp = self.initial_dhp.get_transactions()
+        frequent_itemsets_from_fpg = []
         if transactions_after_dhp is not None:
             fpg = FPgrowth(min_support=self.min_support, transactions=transactions_after_dhp, min_size=self.min_size_per_fpg)
             frequent_itemsets_from_fpg = fpg.run()
