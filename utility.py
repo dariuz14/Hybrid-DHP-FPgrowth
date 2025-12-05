@@ -65,3 +65,21 @@ def extract_association_rules(frequent_itemsets, min_confidence=0.6):
                     })
 
     return rules
+
+# Function for checking frequent-itemsets
+def verify_frequent_itemsets(patterns, transactions, min_support):
+    transactions_set = [set(t) for t in transactions]
+    errors = []
+    
+    for itemset, claimed_sup in patterns:
+        actual_sup = sum(1 for t in transactions_set if itemset.issubset(t))
+        if actual_sup != claimed_sup or actual_sup < min_support:
+            errors.append((itemset, claimed_sup, actual_sup))
+    
+    print(f"✓ {len(patterns) - len(errors)}/{len(patterns)} correct")
+    if errors:
+        print(f"✗ {len(errors)} problematic cases (some examples):")
+        for itemset, claimed, actual in errors[:5]:
+            print(f"  {sorted(itemset)}: claimed={claimed}, actual={actual}")
+    
+    return len(errors) == 0
