@@ -50,17 +50,15 @@ class DHP:
                         if bucket not in frequent_buckets:
                             continue
 
-                        valid = True
-                        for subset in combinations(union, k-1):
-                            if frozenset(subset) not in prev_frequent:
-                                valid = False
-                                break
-                        
-                        if valid:
-                            candidates.add(union)
-                    else:
+                    valid = True
+                    for subset in combinations(union, k-1):
+                        if frozenset(subset) not in prev_frequent:
+                            valid = False
+                            break
+                    
+                    if valid:
                         candidates.add(union)
-            
+                   
         return candidates
         
     def _make_hash_table(self, frequent_k, k):
@@ -115,7 +113,7 @@ class DHP:
 
     def run(self):
 
-        # Part 1: search for frequent 1-itemsets 
+        # --- Part 1: search for frequent 1-itemsets ---
         item_counts = defaultdict(int)
         for transaction in self.transactions:
             for item in transaction:
@@ -127,34 +125,32 @@ class DHP:
         
         prev_frequent = frequent_1
 
-        # Part 2: search for frequent k-itemsets, k >= 2
+        # --- Part 2: search for frequent k-itemsets, k >= 2 ---
         k = 2
 
         # Construct hash table for k-itemsets
         hash_table = self._build_hash_table(k)
         frequent_buckets = self._get_frequent_buckets(hash_table)
-
-        while len(frequent_buckets) >= self.LARGE:
-            # Generate candidate k-itemsets
-            candidates = self._generate_candidates(prev_frequent, k, frequent_buckets) 
-
-            if not candidates:
-                break
-
+        candidates = self._generate_candidates(prev_frequent, k, frequent_buckets)
+        
+        while len(candidates) >= self.LARGE:
             candidate_support = self._count_support(candidates, k)
 
             # Frequent k-itemsets using candidate support
             frequent_k = [itemset for itemset, count in candidate_support.items() if count >= self.min_support] 
 
             if not frequent_k:
-                break
+                print(f"No frequent {k}-itemsets found, terminating DHP.")
+                return all_frequent
 
             all_frequent.extend([(itemset, candidate_support[itemset]) for itemset in frequent_k])
 
             if not self.transactions:
-                break
+                print("No transactions left, terminating DHP.")
+                return all_frequent
 
             if self.max_k is not None and k >= self.max_k:
+                print(f"Reached max_k={self.max_k}, terminating DHP.")
                 return all_frequent
 
             hash_table = self._make_hash_table(frequent_k, k)
@@ -162,11 +158,16 @@ class DHP:
             frequent_buckets = self._get_frequent_buckets(hash_table)
             prev_frequent = frequent_k
             k += 1
+
+            candidates = self._generate_candidates(prev_frequent, k, frequent_buckets)
         
-        # Part 3: continue without hashing
-        candidates = self._generate_candidates(prev_frequent, k, frequent_buckets)
+        # --- Part 3: continue without hashing ---
 
         while candidates:
+
+            if self.max_k is not None and k >= self.max_k:
+                break
+
             candidate_support = self._count_support(candidates, k)
             self.transactions = [t for t in self.transactions if len(t) > k]
 

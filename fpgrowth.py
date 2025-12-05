@@ -9,8 +9,8 @@ class FPNode:
         self.children = []
         self.node_link = None
     
-    def count_increment(self):
-        self.count += 1
+    def count_increment(self, increment=1):
+        self.count += increment
 
     def add_child(self, child_node):
         self.children.append(child_node)
@@ -32,7 +32,7 @@ class FPTree:
                     found_child = child
         
             if found_child:
-                found_child.count_increment()
+                found_child.count_increment(count)
                 current_node = found_child
             else:
                 new_node = FPNode(item, count, current_node)
@@ -76,6 +76,7 @@ class FPgrowth:
         self.min_size = min_size
 
         self.fp_tree = None
+        self.global_item_order = {}
     
     def _get_all_items_in_path(self, tree):
         items = []
@@ -122,13 +123,13 @@ class FPgrowth:
             if len(new_suffix) >= self.min_size:
                 patterns.append((frozenset(new_suffix), support))
 
+            # Build Conditional Pattern Base
             conditional_pb = []
             for node in nodes:
                 path, count = tree.get_path(node)
                 if path:
                     conditional_pb.append((path, count))
             
-            # Build Conditional Pattern Base
             if conditional_pb:
                 item_counts = defaultdict(int)
                 for path, count in conditional_pb:
@@ -142,7 +143,7 @@ class FPgrowth:
                     for path, count in conditional_pb:
                         new_path = [i for i in path if i in frequent_items]
                         if new_path:
-                            new_path = sorted(new_path, key=lambda x: item_counts[x], reverse=True)
+                            new_path = sorted(new_path, key=lambda x: self.global_item_order.get(x, float('inf')))
                             filtered_paths.append((new_path, count))
 
                     # Given the CPB, construct the conditional FP-tree
@@ -163,11 +164,12 @@ class FPgrowth:
             for item in transaction:
                 item_counts[item] += 1
         
+        sorted_items = sorted(item_counts.items(), key=lambda x: x[1], reverse=True)
+        self.global_item_order = {item: idx for idx, (item, _) in enumerate(sorted_items)}
+
         self.transactions = [sorted([item for item in t if item_counts[item] >= self.min_support], 
-                                    key= lambda x: item_counts[x], 
-                                    reverse=True) 
-                                    for t in self.transactions
-                                    ]
+                                    key=lambda x: self.global_item_order.get(x, float('inf')))
+                            for t in self.transactions]
         
         # Build FP-Tree
         self.fp_tree = FPTree()
@@ -177,4 +179,11 @@ class FPgrowth:
         
         self.frequent_patterns = self._mine_tree(self.fp_tree)
         
-        return self.frequent_patterns
+        seen = {}
+        unique_patterns = []
+        for itemset, support in self.frequent_patterns:
+            if itemset not in seen:
+                seen[itemset] = support
+                unique_patterns.append((itemset, support))
+        
+        return unique_patterns
